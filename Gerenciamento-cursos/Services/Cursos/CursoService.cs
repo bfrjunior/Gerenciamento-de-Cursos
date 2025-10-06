@@ -18,7 +18,7 @@ namespace Gerenciamento_cursos.Services.Cursos
 
         public async Task<CursoModel> AddAsync(CursoModel curso)
         {
-            // Nenhuma regra de negócio complexa aqui, apenas persistência.
+            
             _context.Cursos.Add(curso);
             await _context.SaveChangesAsync();
             return curso;
@@ -29,7 +29,7 @@ namespace Gerenciamento_cursos.Services.Cursos
             var existingCurso = await _context.Cursos.FindAsync(curso.Id);
             if (existingCurso == null) return false;
 
-            // Transfere dados para a entidade rastreada
+            
             existingCurso.Nome = curso.Nome;
             existingCurso.Descricao = curso.Descricao;
 
