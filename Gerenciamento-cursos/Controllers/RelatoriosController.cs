@@ -15,7 +15,7 @@ namespace Gerenciamento_cursos.Controllers
 
         public RelatoriosController(IMatriculaService matriculaService)
         {
-            // Reutilizamos o IMatriculaService, pois ele contém o método de filtro.
+            
             _matriculaService = matriculaService;
         }
 
