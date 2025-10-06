@@ -19,7 +19,7 @@ namespace Gerenciamento_cursos.Controllers
             _matriculaService = matriculaService;
         }
 
-        // GET: api/relatorios/alunos-por-curso/5 - Requisito: Listar todos os alunos de um determinado curso
+        // GET: api/relatorios
         [HttpGet("alunos-por-curso/{cursoId}")]
         public async Task<ActionResult<IEnumerable<AlunoModel>>> GetAlunosPorCurso(int cursoId)
         {
