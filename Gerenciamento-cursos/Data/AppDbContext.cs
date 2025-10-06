@@ -9,7 +9,7 @@ namespace Gerenciamento_cursos.Data
         {
         }
 
-        // DbSets para suas entidades
+
         public DbSet<AlunoModel> Alunos { get; set; }
         public DbSet<CursoModel> Cursos { get; set; }
         public DbSet<MatriculaModel> Matriculas { get; set; }
