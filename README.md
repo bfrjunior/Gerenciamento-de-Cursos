@@ -1,62 +1,46 @@
-# Gerenciamento de Cursos
+Gerenciamento de Cursos e Matr√≠culas (Avalia√ß√£o T√©cnica)
+Este projeto implementa o gerenciamento de Cursos, Alunos e Matr√≠culas conforme os requisitos da avalia√ß√£o t√©cnica, utilizando .NET 8 (C#) no Back-End e React (Vite) no Front-End.
 
-Este projeto È um backend para gerenciamento de cursos, alunos e matrÌculas, desenvolvido com .NET 8 e SQL Server. Est· pronto para execuÁ„o em containers Docker, incluindo aplicaÁ„o autom·tica de migrations.
+üöÄ Status do Projeto e Escolhas T√©cnicas
+Back-End (API): Desenvolvido em .NET 8.
 
-## Tecnologias Utilizadas
+Front-End (Web): Desenvolvido em React com Vite.
 
-- .NET 8 (C# 12)
-- ASP.NET Core Web API
-- Entity Framework Core
-- SQL Server
-- Docker & Docker Compose
-- Swagger (OpenAPI)
+Banco de Dados: Para simplificar o processo de execu√ß√£o e deploy, o projeto utiliza o Entity Framework Core In-Memory Database. Isso garante que a aplica√ß√£o rode imediatamente sem a necessidade de configurar um servidor SQL externo.
 
-## Como Executar com Docker
+Containeriza√ß√£o: O Back-End est√° empacotado em um container Docker para facilitar a execu√ß√£o.
 
-1. **Clone o repositÛrio:**
-```bash
-git clone https://github.com/seuusuario/seurepositorio.git
-cd seurepositorio
-```
+‚öôÔ∏è Pr√©-requisitos para Execu√ß√£o Local
+Para rodar este projeto, voc√™ precisa ter instalado:
 
-2. **Suba os containers:**
-```bash
-docker-compose up -d
-```
+Docker Desktop (para executar o container do Back-End).
 
-3. **Acesse a API:**
-- Acesse [http://localhost:5000/swagger](http://localhost:5000/swagger) para testar os endpoints.
+Node.js e npm/Yarn (para rodar o Front-End React).
 
-## ConfiguraÁ„o de Banco de Dados
+SDK do .NET 8 (opcional, se desejar rodar o Back-End fora do Docker).
 
-- O banco de dados È criado automaticamente via migrations.
-- Connection string para Docker:
+1. Execu√ß√£o do Back-End (API)
+O Back-End est√° configurado para rodar em um container Docker, escutando na porta 8080.
 
-## Desenvolvimento Local
+A. Construir a Imagem
+Na raiz do seu reposit√≥rio, execute o comando para construir a imagem da API.
 
-- Configure a connection string em `appsettings.json` para apontar para seu SQL Server local.
-- Execute o projeto normalmente pelo Visual Studio ou CLI:
+docker build -t gerenciamento-api -f Gerenciamento-cursos/Dockerfile .
 
-## Principais Endpoints
+B. Iniciar o Container
+Inicie o container, mapeando a porta interna 8080 para a porta externa 8080.
 
-- `/api/alunos` - Gerenciamento de alunos
-- `/api/cursos` - Gerenciamento de cursos
-- `/api/matriculas` - Gerenciamento de matrÌculas
-- `/api/relatorios` - RelatÛrios diversos
+docker run -d -p 8080:8080 --name gerenciamento-api-run gerenciamento-api
 
-Consulte o Swagger para detalhes completos dos endpoints e modelos.
+URL da API: O Back-End estar√° acess√≠vel em http://localhost:8080/api.
 
-## Migrations
+3. Deploy em Produ√ß√£o (Diferencial)
+O projeto foi configurado com o objetivo de facilitar o deploy na nuvem, sendo publicado no Render.
 
-As migrations s„o aplicadas automaticamente ao iniciar o container. 
-Para criar novas migrations localmente:
+URL P√∫blica do Servi√ßo:
 
-## ObservaÁıes
+Front-End: https://gerenciamento-de-cursos.onrender.com
 
-- O projeto utiliza CORS para permitir acesso do frontend em `http://localhost:5173` e `https://gerenciamento-matriculas.vercel.app`.
-- O Swagger est· habilitado em ambiente de desenvolvimento.
+Back-End (API): https://gerenciamento-de-cursos.onrender.com/api
 
----
-
-**Pronto para avaliaÁ„o:**  
-Basta executar `docker-compose up --build` e acessar o Swagger para testar a aplicaÁ„o.
+Nota: A URL base do Axios no Front-End (client-app/src/services/api.js) foi configurada para usar a URL p√∫blica (https://gerenciamento-de-cursos.onrender.com/api) para o ambiente de produ√ß√£o.
