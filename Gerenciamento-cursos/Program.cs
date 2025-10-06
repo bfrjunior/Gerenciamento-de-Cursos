@@ -20,7 +20,7 @@ builder.Services.AddCors(options =>
         {
 
 
-            policy.WithOrigins("http://localhost:5173")
+            policy.WithOrigins("http://localhost:5173", "https://gerenciamento-matriculas.vercel.app")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -35,12 +35,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins);
