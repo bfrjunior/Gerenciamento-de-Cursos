@@ -13,10 +13,10 @@ namespace Gerenciamento_cursos.Services.Matriculas
             _context = context;
         }
 
-        // 🚨 Lógica de Negócio: Matricular
+        
         public async Task<(bool Success, string ErrorMessage)> MatricularAsync(int alunoId, int cursoId)
         {
-            // 1. Verificar se o aluno e o curso existem
+            
             if (!await _context.Alunos.AnyAsync(a => a.Id == alunoId))
             {
                 return (false, "Aluno não encontrado.");
@@ -26,7 +26,7 @@ namespace Gerenciamento_cursos.Services.Matriculas
                 return (false, "Curso não encontrado.");
             }
 
-            // 2. Verificar se a matrícula já existe (Regra de Unicidade)
+            //  Verificar se a matrícula já existe (Regra de Unicidade)
             var existeMatricula = await _context.Matriculas
                 .AnyAsync(m => m.AlunoId == alunoId && m.CursoId == cursoId);
 
@@ -35,7 +35,7 @@ namespace Gerenciamento_cursos.Services.Matriculas
                 return (false, "O aluno já está matriculado neste curso.");
             }
 
-            // 3. Criar nova matrícula
+            
             var matricula = new MatriculaModel
             {
                 AlunoId = alunoId,
@@ -49,7 +49,7 @@ namespace Gerenciamento_cursos.Services.Matriculas
             return (true, null);
         }
 
-        // Lógica de Persistência: Remover Matrícula
+        
         public async Task<bool> RemoverMatriculaAsync(int alunoId, int cursoId)
         {
             var matricula = await _context.Matriculas
@@ -66,7 +66,7 @@ namespace Gerenciamento_cursos.Services.Matriculas
             return true;
         }
 
-        // Lógica de Relatório/Filtro
+        
         public async Task<IEnumerable<AlunoModel>> GetAlunosByCursoAsync(int cursoId)
         {
             // Usa o Include/Select para carregar os alunos através da tabela de junção
