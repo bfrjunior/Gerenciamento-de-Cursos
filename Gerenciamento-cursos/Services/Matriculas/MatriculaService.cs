@@ -1,0 +1,82 @@
+﻿using Gerenciamento_cursos.Data;
+using Gerenciamento_cursos.Model;
+using Microsoft.EntityFrameworkCore;
+
+namespace Gerenciamento_cursos.Services.Matriculas
+{
+    public class MatriculaService : IMatriculaService
+    {
+        private readonly AppDbContext _context;
+
+        public MatriculaService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        // 🚨 Lógica de Negócio: Matricular
+        public async Task<(bool Success, string ErrorMessage)> MatricularAsync(int alunoId, int cursoId)
+        {
+            // 1. Verificar se o aluno e o curso existem
+            if (!await _context.Alunos.AnyAsync(a => a.Id == alunoId))
+            {
+                return (false, "Aluno não encontrado.");
+            }
+            if (!await _context.Cursos.AnyAsync(c => c.Id == cursoId))
+            {
+                return (false, "Curso não encontrado.");
+            }
+
+            // 2. Verificar se a matrícula já existe (Regra de Unicidade)
+            var existeMatricula = await _context.Matriculas
+                .AnyAsync(m => m.AlunoId == alunoId && m.CursoId == cursoId);
+
+            if (existeMatricula)
+            {
+                return (false, "O aluno já está matriculado neste curso.");
+            }
+
+            // 3. Criar nova matrícula
+            var matricula = new MatriculaModel
+            {
+                AlunoId = alunoId,
+                CursoId = cursoId,
+                DataMatricula = DateTime.Now
+            };
+
+            _context.Matriculas.Add(matricula);
+            await _context.SaveChangesAsync();
+
+            return (true, null);
+        }
+
+        // Lógica de Persistência: Remover Matrícula
+        public async Task<bool> RemoverMatriculaAsync(int alunoId, int cursoId)
+        {
+            var matricula = await _context.Matriculas
+                .FirstOrDefaultAsync(m => m.AlunoId == alunoId && m.CursoId == cursoId);
+
+            if (matricula == null)
+            {
+                return false; // Matrícula não encontrada
+            }
+
+            _context.Matriculas.Remove(matricula);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        // Lógica de Relatório/Filtro
+        public async Task<IEnumerable<AlunoModel>> GetAlunosByCursoAsync(int cursoId)
+        {
+            // Usa o Include/Select para carregar os alunos através da tabela de junção
+            var alunos = await _context.Matriculas
+                .Where(m => m.CursoId == cursoId)
+                .Select(m => m.Aluno)
+                .Distinct()
+                .ToListAsync();
+
+            return alunos;
+        }
+    }
+}

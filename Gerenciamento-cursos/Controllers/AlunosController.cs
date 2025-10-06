@@ -1,6 +1,7 @@
 ﻿using Gerenciamento_cursos.Data;
 using Gerenciamento_cursos.Dto;
 using Gerenciamento_cursos.Model;
+using Gerenciamento_cursos.Services.Aluno;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,41 +12,40 @@ namespace Gerenciamento_cursos.Controllers
     [ApiController]
     public class AlunosController : ControllerBase
     {
-        private readonly AppDbContext _context;
 
-        // Injeção de Dependência do DBContext
-        public AlunosController(AppDbContext context)
+        private readonly IAlunoService _alunoService;
+
+        public AlunosController(IAlunoService alunoService)
         {
-            _context = context;
+            _alunoService = alunoService;
         }
 
-        // GET: api/alunos - Requisito: Listar todos os alunos
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AlunoModel>>> GetAlunos()
         {
-            return await _context.Alunos.ToListAsync();
+
+            return Ok(await _alunoService.GetAllAsync());
         }
 
         // GET: api/alunos/5
         [HttpGet("{id}")]
         public async Task<ActionResult<AlunoModel>> GetAluno(int id)
         {
-            var aluno = await _context.Alunos.FindAsync(id);
+            var aluno = await _alunoService.GetByIdAsync(id);
 
             if (aluno == null)
             {
                 return NotFound();
             }
 
-            return aluno;
+            return Ok(aluno);
         }
 
-        // POST: api/alunos - Requisito: Criar alunos
+
         [HttpPost]
         public async Task<ActionResult<AlunoModel>> PostAluno(AlunoDto alunoDto)
         {
-            // 🚨 VALIDAÇÃO DE NEGÓCIO PENDENTE:
-            // Aqui deveria estar a lógica para checar se o aluno é menor de idade (DataNascimento).
 
             var aluno = new AlunoModel
             {
@@ -54,55 +54,57 @@ namespace Gerenciamento_cursos.Controllers
                 DataNascimento = alunoDto.DataNascimento
             };
 
-            _context.Alunos.Add(aluno);
-            await _context.SaveChangesAsync();
+
+            var result = await _alunoService.AddAsync(aluno);
+
+            if (!result.Success)
+            {
+
+                return BadRequest(result.ErrorMessage);
+            }
+
 
             return CreatedAtAction(nameof(GetAluno), new { id = aluno.Id }, aluno);
         }
 
-        // PUT: api/alunos/5 - Requisito: Editar alunos
+
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAluno(int id, AlunoDto alunoDto)
         {
-            var aluno = await _context.Alunos.FindAsync(id);
-            if (aluno == null)
-            {
-                return NotFound();
-            }
 
-            // Atualiza as propriedades
-            aluno.Nome = alunoDto.Nome;
-            aluno.Email = alunoDto.Email;
-            aluno.DataNascimento = alunoDto.DataNascimento;
+            var aluno = new AlunoModel
+            {
+                Id = id,
+                Nome = alunoDto.Nome,
+                Email = alunoDto.Email,
+                DataNascimento = alunoDto.DataNascimento
+            };
 
-            try
+            var result = await _alunoService.UpdateAsync(aluno);
+
+            if (!result.Success)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Alunos.Any(e => e.Id == id))
+                if (result.ErrorMessage == "Aluno não encontrado.")
                 {
                     return NotFound();
                 }
-                throw;
+
+                return BadRequest(result.ErrorMessage);
             }
 
             return NoContent();
         }
 
-        // DELETE: api/alunos/5 - Requisito: Excluir alunos
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAluno(int id)
         {
-            var aluno = await _context.Alunos.FindAsync(id);
-            if (aluno == null)
+            var deleted = await _alunoService.DeleteAsync(id);
+
+            if (!deleted)
             {
                 return NotFound();
             }
-
-            _context.Alunos.Remove(aluno);
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }

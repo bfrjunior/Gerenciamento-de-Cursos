@@ -1,5 +1,6 @@
 ﻿using Gerenciamento_cursos.Data;
 using Gerenciamento_cursos.Model;
+using Gerenciamento_cursos.Services.Matriculas;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,61 +11,48 @@ namespace Gerenciamento_cursos.Controllers
     [ApiController]
     public class MatriculasController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IMatriculaService _matriculaService;
 
-        public MatriculasController(AppDbContext context)
+        public MatriculasController(IMatriculaService matriculaService)
         {
-            _context = context;
+            _matriculaService = matriculaService;
         }
 
-        // DTO Simples para Matrícula (Poderia estar em DTOs)
+        // DTO Simples para Matrícula
         public class MatricularDto
         {
             public int AlunoId { get; set; }
             public int CursoId { get; set; }
         }
 
-        // POST: api/matriculas - Requisito: Possibilidade de matricular um aluno em um curso
+        // POST: api/matriculas
         [HttpPost]
         public async Task<IActionResult> PostMatricula(MatricularDto matricularDto)
         {
-            // 1. Verificar se a matrícula já existe
-            var existeMatricula = await _context.Matriculas
-                .AnyAsync(m => m.AlunoId == matricularDto.AlunoId && m.CursoId == matricularDto.CursoId);
+            var result = await _matriculaService.MatricularAsync(
+                matricularDto.AlunoId,
+                matricularDto.CursoId
+            );
 
-            if (existeMatricula)
+            if (!result.Success)
             {
-                return Conflict("O aluno já está matriculado neste curso.");
+                // 409 Conflict para duplicidade, 400 Bad Request para outros erros de validação
+                return Conflict(result.ErrorMessage);
             }
 
-            // 2. Criar nova matrícula
-            var matricula = new MatriculaModel
-            {
-                AlunoId = matricularDto.AlunoId,
-                CursoId = matricularDto.CursoId,
-                DataMatricula = DateTime.Now
-            };
-
-            _context.Matriculas.Add(matricula);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(PostMatricula), matricula);
+            return Ok("Matrícula realizada com sucesso.");
         }
 
-        // DELETE: api/matriculas?alunoId=1&cursoId=2 - Requisito: Remover um aluno de um curso
+        // DELETE: api/matriculas?alunoId=1&cursoId=2
         [HttpDelete]
         public async Task<IActionResult> DeleteMatricula([FromQuery] int alunoId, [FromQuery] int cursoId)
         {
-            var matricula = await _context.Matriculas
-                .FirstOrDefaultAsync(m => m.AlunoId == alunoId && m.CursoId == cursoId);
+            var success = await _matriculaService.RemoverMatriculaAsync(alunoId, cursoId);
 
-            if (matricula == null)
+            if (!success)
             {
                 return NotFound("Matrícula não encontrada.");
             }
-
-            _context.Matriculas.Remove(matricula);
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }

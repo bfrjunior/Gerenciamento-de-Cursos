@@ -1,6 +1,7 @@
 ﻿using Gerenciamento_cursos.Data;
 using Gerenciamento_cursos.Dto;
 using Gerenciamento_cursos.Model;
+using Gerenciamento_cursos.Services.Cursos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,36 +12,36 @@ namespace Gerenciamento_cursos.Controllers
     [ApiController]
     public class CursosController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ICursoService _cursoService;
 
-        // Injeção de Dependência do DBContext
-        public CursosController(AppDbContext context)
+        // Injeção de ICursoService
+        public CursosController(ICursoService cursoService)
         {
-            _context = context;
+            _cursoService = cursoService;
         }
 
-        // GET: api/cursos - Requisito: Listar todos os cursos disponíveis
+        // GET: api/cursos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CursoModel>>> GetCursos()
         {
-            return await _context.Cursos.ToListAsync();
+            return Ok(await _cursoService.GetAllAsync());
         }
 
         // GET: api/cursos/5
         [HttpGet("{id}")]
         public async Task<ActionResult<CursoModel>> GetCurso(int id)
         {
-            var curso = await _context.Cursos.FindAsync(id);
+            var curso = await _cursoService.GetByIdAsync(id);
 
             if (curso == null)
             {
                 return NotFound();
             }
 
-            return curso;
+            return Ok(curso);
         }
 
-        // POST: api/cursos - Requisito: Criar cursos
+        // POST: api/cursos
         [HttpPost]
         public async Task<ActionResult<CursoModel>> PostCurso(CursoDto cursoDto)
         {
@@ -50,54 +51,42 @@ namespace Gerenciamento_cursos.Controllers
                 Descricao = cursoDto.Descricao
             };
 
-            _context.Cursos.Add(curso);
-            await _context.SaveChangesAsync();
+            var novoCurso = await _cursoService.AddAsync(curso);
 
-            // Retorna o curso criado com a URI para acesso direto
-            return CreatedAtAction(nameof(GetCurso), new { id = curso.Id }, curso);
+            return CreatedAtAction(nameof(GetCurso), new { id = novoCurso.Id }, novoCurso);
         }
 
-        // PUT: api/cursos/5 - Requisito: Editar cursos
+        // PUT: api/cursos/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutCurso(int id, CursoDto cursoDto)
         {
-            var curso = await _context.Cursos.FindAsync(id);
-            if (curso == null)
+            var curso = new CursoModel
+            {
+                Id = id,
+                Nome = cursoDto.Nome,
+                Descricao = cursoDto.Descricao
+            };
+
+            var success = await _cursoService.UpdateAsync(curso);
+
+            if (!success)
             {
                 return NotFound();
             }
 
-            curso.Nome = cursoDto.Nome;
-            curso.Descricao = cursoDto.Descricao;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Cursos.Any(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                throw;
-            }
-
-            return NoContent(); // Retorno padrão para atualização bem-sucedida sem conteúdo.
+            return NoContent();
         }
 
-        // DELETE: api/cursos/5 - Requisito: Excluir cursos
+        // DELETE: api/cursos/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCurso(int id)
         {
-            var curso = await _context.Cursos.FindAsync(id);
-            if (curso == null)
+            var success = await _cursoService.DeleteAsync(id);
+
+            if (!success)
             {
                 return NotFound();
             }
-
-            _context.Cursos.Remove(curso);
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }
