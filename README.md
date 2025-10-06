@@ -39,7 +39,7 @@ O projeto foi configurado com o objetivo de facilitar o deploy na nuvem, sendo p
 
 URL Pública do Serviço:
 
-Front-End: https://gerenciamento-de-cursos.onrender.com
+Front-End: https://gerenciamento-matriculas.vercel.app/
 
 Back-End (API): https://gerenciamento-de-cursos.onrender.com/api
 
