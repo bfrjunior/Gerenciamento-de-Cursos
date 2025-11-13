@@ -1,46 +1,176 @@
-Gerenciamento de Cursos e Matrículas (Avaliação Técnica)
-Este projeto implementa o gerenciamento de Cursos, Alunos e Matrículas conforme os requisitos da avaliação técnica, utilizando .NET 8 (C#) no Back-End e React (Vite) no Front-End.
+# 📚 Gerenciamento de Cursos e Matrículas
 
-🚀 Status do Projeto e Escolhas Técnicas
-Back-End (API): Desenvolvido em .NET 8.
+> Sistema completo para gerenciamento de cursos, alunos e matrículas desenvolvido como avaliação técnica.
 
-Front-End (Web): Desenvolvido em React com Vite.
+## 📋 Sobre o Projeto
 
-Banco de Dados: Para simplificar o processo de execução e deploy, o projeto utiliza o Entity Framework Core In-Memory Database. Isso garante que a aplicação rode imediatamente sem a necessidade de configurar um servidor SQL externo.
+Este projeto implementa um sistema completo de gerenciamento acadêmico com as seguintes funcionalidades:
 
-Containerização: O Back-End está empacotado em um container Docker para facilitar a execução.
+- ✅ **Gestão de Cursos**: Criação, edição, listagem e exclusão de cursos
+- ✅ **Gestão de Alunos**: Cadastro completo de alunos com validações
+- ✅ **Sistema de Matrículas**: Controle de matrículas com regras de negócio
+- ✅ **Relatórios**: Geração de relatórios de cursos e matrículas
+- ✅ **Validações**: Sistema robusto de validação de dados
+- ✅ **Testes Unitários**: Cobertura de testes para serviços e validadores
 
-⚙️ Pré-requisitos para Execução Local
-Para rodar este projeto, você precisa ter instalado:
+## 🛠️ Tecnologias Utilizadas
 
-Docker Desktop (para executar o container do Back-End).
+### Backend
+- **.NET 8** - Framework principal
+- **Entity Framework Core** - ORM com In-Memory Database
+- **AutoMapper** - Mapeamento de objetos
+- **FluentValidation** - Validação de dados
+- **Swagger/OpenAPI** - Documentação da API
+- **xUnit** - Framework de testes
 
-Node.js e npm/Yarn (para rodar o Front-End React).
 
-SDK do .NET 8 (opcional, se desejar rodar o Back-End fora do Docker).
+### DevOps
+- **Docker** - Containerização
+- **Docker Compose** - Orquestração de containers
+- **GitHub Actions** - CI/CD
 
-1. Execução do Back-End (API)
-O Back-End está configurado para rodar em um container Docker, escutando na porta 8080.
+## 🏗️ Arquitetura do Projeto
 
-A. Construir a Imagem
-Na raiz do seu repositório, execute o comando para construir a imagem da API.
+```
+Gerenciamento-de-Cursos/
+├── Gerenciamento-cursos/          # API Backend (.NET 8)
+│   ├── Controllers/               # Controladores da API
+│   ├── Services/                  # Lógica de negócio
+│   ├── Repositories/              # Camada de dados
+│   ├── Models/                    # Modelos de domínio
+│   ├── Dto/                       # Data Transfer Objects
+│   ├── Validators/                # Validadores FluentValidation
+│   └── Data/                      # Contexto do banco de dados
+├── Gerenciamento-cursos.Tests/    # Testes unitários
+└── client-app/                    # Frontend React (não mostrado)
+```
 
-docker build -t gerenciamento-api -f Gerenciamento-cursos/Dockerfile .
+## ⚙️ Pré-requisitos
 
-B. Iniciar o Container
-Inicie o container, mapeando a porta interna 8080 para a porta externa 8080.
+Para executar este projeto, você precisa ter instalado:
 
-docker run -d -p 8080:8080 --name gerenciamento-api-run gerenciamento-api
+- **Docker Desktop** (recomendado)
+- **Node.js 18+** e **npm/yarn** (para o frontend)
+- **.NET 8 SDK** (opcional, para desenvolvimento)
 
-URL da API: O Back-End estará acessível em http://localhost:8080/api.
+## 🚀 Como Executar
 
-3. Deploy em Produção (Diferencial)
-O projeto foi configurado com o objetivo de facilitar o deploy na nuvem, sendo publicado no Render.
+### Opção 1: Docker Compose (Recomendado)
 
-URL Pública do Serviço:
+```bash
+# Clone o repositório
+git clone <url-do-repositorio>
+cd Gerenciamento-de-Cursos
+```
 
-Front-End: https://gerenciamento-matriculas.vercel.app/
+### Opção 2: Docker Manual
 
-Back-End (API): https://gerenciamento-de-cursos.onrender.com/api
+```bash
+# Construir a imagem
+lembre-se de estar dentro de : Gerenciamento-de-Cursos
 
-Nota: A URL base do Axios no Front-End (client-app/src/services/api.js) foi configurada para usar a URL pública (https://gerenciamento-de-cursos.onrender.com/api) para o ambiente de produção.
+docker build -t gerenciamento-cursos-backend -f Gerenciamento-cursos/Dockerfile .
+
+# Executar o container
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -e ASPNETCORE_URLS=http://+:8080 gerenciamento-cursos-backend
+```
+
+### Opção 3: Execução Local (.NET)
+
+```bash
+# Navegar para o diretório da API
+cd Gerenciamento-cursos
+
+# Restaurar dependências
+dotnet restore
+
+# Executar a aplicação
+dotnet run
+```
+
+## 🌐 URLs de Acesso
+
+### Desenvolvimento Local
+Via Docker:
+- **API**: http://localhost:8080/api
+- **Swagger**: http://localhost:8080/swagger
+- **Health Check**: http://localhost:8080/health
+### Localhost:
+- API: https://localhost:7238/api
+- Swagger:https://localhost:7238/swagger/index.html
+
+
+### Produção
+- **Frontend**: https://gerenciamento-matriculas.vercel.app/
+- **API**: https://gerenciamento-de-cursos.onrender.com/api
+
+
+## 🧪 Executando Testes
+
+```bash
+# Navegar para o diretório de testes
+cd Gerenciamento-cursos.Tests
+
+# Executar todos os testes
+dotnet test
+
+# Executar testes com cobertura
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+## 📊 Endpoints da API
+
+### Cursos
+- `GET /api/cursos` - Listar todos os cursos
+- `GET /api/cursos/{id}` - Obter curso por ID
+- `POST /api/cursos` - Criar novo curso
+- `PUT /api/cursos/{id}` - Atualizar curso
+- `DELETE /api/cursos/{id}` - Excluir curso
+
+### Alunos
+- `GET /api/alunos` - Listar todos os alunos
+- `GET /api/alunos/{id}` - Obter aluno por ID
+- `POST /api/alunos` - Criar novo aluno
+- `PUT /api/alunos/{id}` - Atualizar aluno
+- `DELETE /api/alunos/{id}` - Excluir aluno
+
+### Matrículas
+- `GET /api/matriculas` - Listar todas as matrículas
+- `GET /api/matriculas/{id}` - Obter matrícula por ID
+- `POST /api/matriculas` - Criar nova matrícula
+- `DELETE /api/matriculas/{id}` - Cancelar matrícula
+
+### Relatórios
+- `GET /api/relatorios/cursos` - Relatório de cursos
+- `GET /api/relatorios/matriculas` - Relatório de matrículas
+
+## 🔧 Configurações
+
+### Variáveis de Ambiente
+
+```bash
+ASPNETCORE_ENVIRONMENT=Development
+ASPNETCORE_URLS=http://+:8080
+```
+
+### Banco de Dados
+
+O projeto utiliza **Entity Framework Core In-Memory Database** para simplificar a execução e deploy. Os dados são populados automaticamente na inicialização da aplicação.
+
+## 📈 Funcionalidades Implementadas
+
+- [x] CRUD completo de Cursos
+- [x] CRUD completo de Alunos
+- [x] Sistema de Matrículas
+- [x] Validações de negócio
+- [x] Tratamento de erros
+- [x] Documentação Swagger
+- [x] Testes unitários
+- [x] Containerização Docker
+- [x] Deploy em produção
+- [x] CI/CD com GitHub Actions
+
+
+
+---
+
