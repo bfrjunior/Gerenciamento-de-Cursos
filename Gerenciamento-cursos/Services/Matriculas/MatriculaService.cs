@@ -1,41 +1,42 @@
-﻿using Gerenciamento_cursos.Data;
-using Gerenciamento_cursos.Model;
+﻿using Gerenciamento_cursos.Model;
+using Gerenciamento_cursos.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Gerenciamento_cursos.Services.Matriculas
 {
     public class MatriculaService : IMatriculaService
     {
-        private readonly AppDbContext _context;
+        private readonly IRepository<AlunoModel> _alunoRepository;
+        private readonly IRepository<CursoModel> _cursoRepository;
+        private readonly IMatriculaRepository _matriculaRepository;
 
-        public MatriculaService(AppDbContext context)
+        public MatriculaService(
+            IRepository<AlunoModel> alunoRepository,
+            IRepository<CursoModel> cursoRepository,
+            IMatriculaRepository matriculaRepository)
         {
-            _context = context;
+            _alunoRepository = alunoRepository;
+            _cursoRepository = cursoRepository;
+            _matriculaRepository = matriculaRepository;
         }
 
-        
         public async Task<(bool Success, string ErrorMessage)> MatricularAsync(int alunoId, int cursoId)
         {
-            
-            if (!await _context.Alunos.AnyAsync(a => a.Id == alunoId))
+            if (!await _alunoRepository.ExistsAsync(alunoId))
             {
                 return (false, "Aluno não encontrado.");
             }
-            if (!await _context.Cursos.AnyAsync(c => c.Id == cursoId))
+
+            if (!await _cursoRepository.ExistsAsync(cursoId))
             {
                 return (false, "Curso não encontrado.");
             }
 
-            //  Verificar se a matrícula já existe (Regra de Unicidade)
-            var existeMatricula = await _context.Matriculas
-                .AnyAsync(m => m.AlunoId == alunoId && m.CursoId == cursoId);
-
-            if (existeMatricula)
+            if (await _matriculaRepository.ExistsAsync(alunoId, cursoId))
             {
                 return (false, "O aluno já está matriculado neste curso.");
             }
 
-            
             var matricula = new MatriculaModel
             {
                 AlunoId = alunoId,
@@ -43,40 +44,32 @@ namespace Gerenciamento_cursos.Services.Matriculas
                 DataMatricula = DateTime.Now
             };
 
-            _context.Matriculas.Add(matricula);
-            await _context.SaveChangesAsync();
-
-            return (true, null);
+            try
+            {
+                await _matriculaRepository.AddAsync(matricula);
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Erro ao criar matrícula: {ex.Message}");
+            }
         }
 
-        
         public async Task<bool> RemoverMatriculaAsync(int alunoId, int cursoId)
         {
-            var matricula = await _context.Matriculas
-                .FirstOrDefaultAsync(m => m.AlunoId == alunoId && m.CursoId == cursoId);
-
-            if (matricula == null)
+            try
             {
-                return false; // Matrícula não encontrada
+                return await _matriculaRepository.DeleteAsync(alunoId, cursoId);
             }
-
-            _context.Matriculas.Remove(matricula);
-            await _context.SaveChangesAsync();
-
-            return true;
+            catch
+            {
+                return false;
+            }
         }
 
-        
         public async Task<IEnumerable<AlunoModel>> GetAlunosByCursoAsync(int cursoId)
         {
-            // Usa o Include/Select para carregar os alunos através da tabela de junção
-            var alunos = await _context.Matriculas
-                .Where(m => m.CursoId == cursoId)
-                .Select(m => m.Aluno)
-                .Distinct()
-                .ToListAsync();
-
-            return alunos;
+            return await _matriculaRepository.GetAlunosByCursoAsync(cursoId);
         }
     }
 }

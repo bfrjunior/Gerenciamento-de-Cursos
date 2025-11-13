@@ -1,61 +1,87 @@
-﻿using Gerenciamento_cursos.Data;
-using Gerenciamento_cursos.Model;
-using Microsoft.EntityFrameworkCore;
+﻿using Gerenciamento_cursos.Model;
+using Gerenciamento_cursos.Repositories;
+using Gerenciamento_cursos.Validators;
 
 namespace Gerenciamento_cursos.Services.Cursos
 {
     public class CursoService : ICursoService
     {
-        private readonly AppDbContext _context;
+        private readonly IRepository<CursoModel> _repository;
+        private readonly ICursoValidator _validator;
 
-        public CursoService(AppDbContext context)
+        public CursoService(IRepository<CursoModel> repository, ICursoValidator validator)
         {
-            _context = context;
+            _repository = repository;
+            _validator = validator;
         }
 
-        public async Task<IEnumerable<CursoModel>> GetAllAsync() => await _context.Cursos.ToListAsync();
-        public async Task<CursoModel> GetByIdAsync(int id) => await _context.Cursos.FindAsync(id);
-
-        public async Task<CursoModel> AddAsync(CursoModel curso)
+        public async Task<IEnumerable<CursoModel>> GetAllAsync()
         {
-            
-            _context.Cursos.Add(curso);
-            await _context.SaveChangesAsync();
-            return curso;
+            return await _repository.GetAllAsync();
         }
 
-        public async Task<bool> UpdateAsync(CursoModel curso)
+        public async Task<CursoModel> GetByIdAsync(int id)
         {
-            var existingCurso = await _context.Cursos.FindAsync(curso.Id);
-            if (existingCurso == null) return false;
+            return await _repository.GetByIdAsync(id);
+        }
 
+        public async Task<(bool Success, string ErrorMessage, CursoModel Curso)> AddAsync(CursoModel curso)
+        {
+            var validationResult = _validator.Validate(curso);
             
-            existingCurso.Nome = curso.Nome;
-            existingCurso.Descricao = curso.Descricao;
+            if (!validationResult.Success)
+            {
+                var errorMsg = validationResult.ErrorMessage ?? 
+                    string.Join("; ", validationResult.Errors);
+                return (false, errorMsg, null);
+            }
 
             try
             {
-                await _context.SaveChangesAsync();
-                return true;
+                var newCurso = await _repository.AddAsync(curso);
+                return (true, null, newCurso);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!_context.Cursos.Any(e => e.Id == curso.Id))
-                {
-                    return false;
-                }
-                throw;
+                return (false, $"Erro ao adicionar curso: {ex.Message}", null);
+            }
+        }
+
+        public async Task<(bool Success, string ErrorMessage)> UpdateAsync(CursoModel curso)
+        {
+            var existingCurso = await _repository.GetByIdAsync(curso.Id);
+            if (existingCurso == null)
+            {
+                return (false, "Curso não encontrado.");
+            }
+
+            var validationResult = _validator.Validate(curso);
+            
+            if (!validationResult.Success)
+            {
+                var errorMsg = validationResult.ErrorMessage ?? 
+                    string.Join("; ", validationResult.Errors);
+                return (false, errorMsg);
+            }
+
+            try
+            {
+                // Atualiza apenas os campos necessários
+                existingCurso.Nome = curso.Nome;
+                existingCurso.Descricao = curso.Descricao;
+                
+                await _repository.UpdateAsync(existingCurso);
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Erro ao atualizar curso: {ex.Message}");
             }
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var curso = await _context.Cursos.FindAsync(id);
-            if (curso == null) return false;
-
-            _context.Cursos.Remove(curso);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _repository.DeleteAsync(id);
         }
     }
 }

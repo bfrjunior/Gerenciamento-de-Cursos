@@ -1,10 +1,7 @@
-﻿using Gerenciamento_cursos.Data;
-using Gerenciamento_cursos.Dto;
+﻿using Gerenciamento_cursos.Dto;
 using Gerenciamento_cursos.Model;
 using Gerenciamento_cursos.Services.Cursos;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Gerenciamento_cursos.Controllers
 {
@@ -14,20 +11,17 @@ namespace Gerenciamento_cursos.Controllers
     {
         private readonly ICursoService _cursoService;
 
-        // Injeção de ICursoService
         public CursosController(ICursoService cursoService)
         {
             _cursoService = cursoService;
         }
 
-        // GET: api/cursos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CursoModel>>> GetCursos()
         {
             return Ok(await _cursoService.GetAllAsync());
         }
 
-        // GET: api/cursos/5
         [HttpGet("{id}")]
         public async Task<ActionResult<CursoModel>> GetCurso(int id)
         {
@@ -41,7 +35,6 @@ namespace Gerenciamento_cursos.Controllers
             return Ok(curso);
         }
 
-        // POST: api/cursos
         [HttpPost]
         public async Task<ActionResult<CursoModel>> PostCurso(CursoDto cursoDto)
         {
@@ -51,12 +44,16 @@ namespace Gerenciamento_cursos.Controllers
                 Descricao = cursoDto.Descricao
             };
 
-            var novoCurso = await _cursoService.AddAsync(curso);
+            var result = await _cursoService.AddAsync(curso);
 
-            return CreatedAtAction(nameof(GetCurso), new { id = novoCurso.Id }, novoCurso);
+            if (!result.Success)
+            {
+                return BadRequest(result.ErrorMessage);
+            }
+
+            return CreatedAtAction(nameof(GetCurso), new { id = result.Curso.Id }, result.Curso);
         }
 
-        // PUT: api/cursos/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutCurso(int id, CursoDto cursoDto)
         {
@@ -67,17 +64,20 @@ namespace Gerenciamento_cursos.Controllers
                 Descricao = cursoDto.Descricao
             };
 
-            var success = await _cursoService.UpdateAsync(curso);
+            var result = await _cursoService.UpdateAsync(curso);
 
-            if (!success)
+            if (!result.Success)
             {
-                return NotFound();
+                if (result.ErrorMessage == "Curso não encontrado.")
+                {
+                    return NotFound();
+                }
+                return BadRequest(result.ErrorMessage);
             }
 
             return NoContent();
         }
 
-        // DELETE: api/cursos/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCurso(int id)
         {

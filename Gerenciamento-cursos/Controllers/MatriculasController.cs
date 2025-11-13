@@ -1,9 +1,6 @@
-﻿using Gerenciamento_cursos.Data;
-using Gerenciamento_cursos.Model;
+﻿using Gerenciamento_cursos.Dto;
 using Gerenciamento_cursos.Services.Matriculas;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Gerenciamento_cursos.Controllers
 {
@@ -18,14 +15,6 @@ namespace Gerenciamento_cursos.Controllers
             _matriculaService = matriculaService;
         }
 
-        // DTO Simples para Matrícula
-        public class MatricularDto
-        {
-            public int AlunoId { get; set; }
-            public int CursoId { get; set; }
-        }
-
-        // POST: api/matriculas
         [HttpPost]
         public async Task<IActionResult> PostMatricula(MatricularDto matricularDto)
         {
@@ -36,14 +25,12 @@ namespace Gerenciamento_cursos.Controllers
 
             if (!result.Success)
             {
-                // 409 Conflict para duplicidade, 400 Bad Request para outros erros de validação
                 return Conflict(result.ErrorMessage);
             }
 
             return Ok("Matrícula realizada com sucesso.");
         }
 
-        // DELETE: api/matriculas?alunoId=1&cursoId=2
         [HttpDelete]
         public async Task<IActionResult> DeleteMatricula([FromQuery] int alunoId, [FromQuery] int cursoId)
         {

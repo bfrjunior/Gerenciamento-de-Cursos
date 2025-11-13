@@ -6,8 +6,8 @@ namespace Gerenciamento_cursos.Services.Cursos
     {
         Task<IEnumerable<CursoModel>> GetAllAsync();
         Task<CursoModel> GetByIdAsync(int id);
-        Task<CursoModel> AddAsync(CursoModel curso);
-        Task<bool> UpdateAsync(CursoModel curso);
+        Task<(bool Success, string ErrorMessage, CursoModel Curso)> AddAsync(CursoModel curso);
+        Task<(bool Success, string ErrorMessage)> UpdateAsync(CursoModel curso);
         Task<bool> DeleteAsync(int id);
     }
 }

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Gerenciamento-cursos/Dockerfile
+    container_name: gerenciamento-api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    networks:
+      - gerenciamento-network
+
+networks:
+  gerenciamento-network:
+    driver: bridge

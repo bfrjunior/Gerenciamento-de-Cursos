@@ -1,79 +1,87 @@
-﻿using Gerenciamento_cursos.Data;
-using Gerenciamento_cursos.Model;
-using Microsoft.EntityFrameworkCore;
+﻿using Gerenciamento_cursos.Model;
+using Gerenciamento_cursos.Repositories;
+using Gerenciamento_cursos.Validators;
 
 namespace Gerenciamento_cursos.Services.Aluno
 {
     public class AlunoService : IAlunoService
     {
-        private readonly AppDbContext _context;
+        private readonly IRepository<AlunoModel> _repository;
+        private readonly IAlunoValidator _validator;
 
-        public AlunoService(AppDbContext context)
+        public AlunoService(IRepository<AlunoModel> repository, IAlunoValidator validator)
         {
-            _context = context;
+            _repository = repository;
+            _validator = validator;
         }
 
+        public async Task<IEnumerable<AlunoModel>> GetAllAsync()
+        {
+            return await _repository.GetAllAsync();
+        }
 
-        public async Task<IEnumerable<AlunoModel>> GetAllAsync() => await _context.Alunos.ToListAsync();
-        public async Task<AlunoModel> GetByIdAsync(int id) => await _context.Alunos.FindAsync(id);
+        public async Task<AlunoModel> GetByIdAsync(int id)
+        {
+            return await _repository.GetByIdAsync(id);
+        }
+
         public async Task<bool> DeleteAsync(int id)
         {
-            var aluno = await _context.Alunos.FindAsync(id);
-            if (aluno == null) return false;
-
-            _context.Alunos.Remove(aluno);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _repository.DeleteAsync(id);
         }
-
 
         public async Task<(bool Success, string ErrorMessage)> AddAsync(AlunoModel aluno)
         {
-
-            if (aluno.Idade < 18)
+            var validationResult = await _validator.ValidateAsync(aluno, isUpdate: false);
+            
+            if (!validationResult.Success)
             {
-                return (false, "O aluno deve ter 18 anos ou mais para ser matriculado.");
+                var errorMsg = validationResult.ErrorMessage ?? 
+                    string.Join("; ", validationResult.Errors);
+                return (false, errorMsg);
             }
 
-            _context.Alunos.Add(aluno);
-            await _context.SaveChangesAsync();
-            return (true, null);
+            try
+            {
+                await _repository.AddAsync(aluno);
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Erro ao adicionar aluno: {ex.Message}");
+            }
         }
-
 
         public async Task<(bool Success, string ErrorMessage)> UpdateAsync(AlunoModel aluno)
         {
-
-            if (aluno.Idade < 18)
-            {
-                return (false, "A data de nascimento atualizada indica que o aluno é menor de idade. A matrícula requer 18 anos ou mais.");
-            }
-
-
-            var existingAluno = await _context.Alunos.FindAsync(aluno.Id);
+            var existingAluno = await _repository.GetByIdAsync(aluno.Id);
             if (existingAluno == null)
             {
                 return (false, "Aluno não encontrado.");
             }
 
-
-            existingAluno.Nome = aluno.Nome;
-            existingAluno.Email = aluno.Email;
-            existingAluno.DataNascimento = aluno.DataNascimento;
+            var validationResult = await _validator.ValidateAsync(aluno, isUpdate: true);
+            
+            if (!validationResult.Success)
+            {
+                var errorMsg = validationResult.ErrorMessage ?? 
+                    string.Join("; ", validationResult.Errors);
+                return (false, errorMsg);
+            }
 
             try
             {
-                await _context.SaveChangesAsync();
+                // Atualiza apenas os campos necessários
+                existingAluno.Nome = aluno.Nome;
+                existingAluno.Email = aluno.Email;
+                existingAluno.DataNascimento = aluno.DataNascimento;
+                
+                await _repository.UpdateAsync(existingAluno);
                 return (true, null);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-
-                if (!_context.Alunos.Any(e => e.Id == aluno.Id))
-                {
-                    return (false, "Aluno não encontrado ou conflito de concorrência.");
-                }
-                throw;
+                return (false, $"Erro ao atualizar aluno: {ex.Message}");
             }
         }
     }

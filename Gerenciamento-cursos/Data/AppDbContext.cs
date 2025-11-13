@@ -9,28 +9,57 @@ namespace Gerenciamento_cursos.Data
         {
         }
 
-
         public DbSet<AlunoModel> Alunos { get; set; }
         public DbSet<CursoModel> Cursos { get; set; }
         public DbSet<MatriculaModel> Matriculas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configuração da entidade Aluno
+            modelBuilder.Entity<AlunoModel>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nome)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasComment("Nome completo do aluno");
+                entity.Property(e => e.Email)
+                    .IsRequired()
+                    .HasMaxLength(150)
+                    .HasComment("Email único do aluno");
+                entity.Property(e => e.DataNascimento)
+                    .IsRequired();
+                entity.HasIndex(e => e.Email).IsUnique();
+            });
 
-            modelBuilder.Entity<MatriculaModel>()
-                .HasKey(m => new { m.AlunoId, m.CursoId });
+            // Configuração da entidade Curso
+            modelBuilder.Entity<CursoModel>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nome)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasComment("Nome do curso");
+                entity.Property(e => e.Descricao)
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasComment("Descrição detalhada do curso");
+            });
 
-
-            modelBuilder.Entity<MatriculaModel>()
-                .HasOne(m => m.Aluno)
-                .WithMany(a => a.Matriculas)
-                .HasForeignKey(m => m.AlunoId);
-
-
-            modelBuilder.Entity<MatriculaModel>()
-                .HasOne(m => m.Curso)
-                .WithMany(c => c.Matriculas)
-                .HasForeignKey(m => m.CursoId);
+            // Configuração da entidade Matrícula
+            modelBuilder.Entity<MatriculaModel>(entity =>
+            {
+                entity.HasKey(m => new { m.AlunoId, m.CursoId });
+                entity.Property(e => e.DataMatricula).IsRequired();
+                entity.HasOne(m => m.Aluno)
+                    .WithMany(a => a.Matriculas)
+                    .HasForeignKey(m => m.AlunoId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(m => m.Curso)
+                    .WithMany(c => c.Matriculas)
+                    .HasForeignKey(m => m.CursoId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
             base.OnModelCreating(modelBuilder);
         }

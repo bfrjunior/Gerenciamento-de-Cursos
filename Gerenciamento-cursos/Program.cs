@@ -1,7 +1,9 @@
 ﻿using Gerenciamento_cursos.Data;
+using Gerenciamento_cursos.Repositories;
 using Gerenciamento_cursos.Services.Aluno;
 using Gerenciamento_cursos.Services.Cursos;
 using Gerenciamento_cursos.Services.Matriculas;
+using Gerenciamento_cursos.Validators;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,17 +22,28 @@ builder.Services.AddCors(options =>
         {
 
 
-            policy.WithOrigins("http://localhost:5173", "https://gerenciamento-matriculas.vercel.app")
+            policy.WithOrigins("http://localhost:5173", "https://gerenciamento-matriculas.vercel.app", "http://localhost:3000")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
 });
+
+// Registrar repositories
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IMatriculaRepository, MatriculaRepository>();
+
+// Registrar validadores
+builder.Services.AddScoped<IAlunoValidator, AlunoValidator>();
+builder.Services.AddScoped<ICursoValidator, CursoValidator>();
+
+// Registrar serviços
 builder.Services.AddScoped<IAlunoService, AlunoService>();
 builder.Services.AddScoped<ICursoService, CursoService>();
 builder.Services.AddScoped<IMatriculaService, MatriculaService>();
+
+// Configurar DbContext com banco em memória
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    //options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
     options.UseInMemoryDatabase("MatriculasEmMemoria");
 });
 
@@ -45,9 +58,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins);
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
