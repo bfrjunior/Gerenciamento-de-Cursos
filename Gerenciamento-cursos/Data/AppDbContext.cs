@@ -21,12 +21,10 @@ namespace Gerenciamento_cursos.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Nome)
                     .IsRequired()
-                    .HasMaxLength(100)
-                    .HasComment("Nome completo do aluno");
+                    .HasMaxLength(100);
                 entity.Property(e => e.Email)
                     .IsRequired()
-                    .HasMaxLength(150)
-                    .HasComment("Email único do aluno");
+                    .HasMaxLength(150);
                 entity.Property(e => e.DataNascimento)
                     .IsRequired();
                 entity.HasIndex(e => e.Email).IsUnique();
@@ -38,12 +36,10 @@ namespace Gerenciamento_cursos.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Nome)
                     .IsRequired()
-                    .HasMaxLength(100)
-                    .HasComment("Nome do curso");
+                    .HasMaxLength(100);
                 entity.Property(e => e.Descricao)
                     .IsRequired()
-                    .HasMaxLength(500)
-                    .HasComment("Descrição detalhada do curso");
+                    .HasMaxLength(500);
             });
 
             // Configuração da entidade Matrícula

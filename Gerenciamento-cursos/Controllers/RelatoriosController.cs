@@ -1,9 +1,6 @@
-﻿using Gerenciamento_cursos.Data;
-using Gerenciamento_cursos.Model;
+﻿using Gerenciamento_cursos.Model;
 using Gerenciamento_cursos.Services.Matriculas;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Gerenciamento_cursos.Controllers
 {
@@ -15,22 +12,21 @@ namespace Gerenciamento_cursos.Controllers
 
         public RelatoriosController(IMatriculaService matriculaService)
         {
-            
             _matriculaService = matriculaService;
         }
 
-        // GET: api/relatorios
         [HttpGet("alunos-por-curso/{cursoId}")]
-        public async Task<ActionResult<IEnumerable<AlunoModel>>> GetAlunosPorCurso(int cursoId)
+        public async Task<ActionResult> GetAlunosPorCurso(int cursoId)
         {
-            var alunos = await _matriculaService.GetAlunosByCursoAsync(cursoId);
+            var resultado = await _matriculaService.GetAlunosByCursoAsync(cursoId);
 
-            if (alunos == null || !alunos.Any())
-            {
-                return NotFound($"Nenhum aluno encontrado para o Curso ID: {cursoId}.");
-            }
+            if (!resultado.Success)
+                return BadRequest(resultado);
 
-            return Ok(alunos);
+            if (resultado.Data == null || !resultado.Data.Any())
+                return NotFound(new { message = $"Nenhum aluno encontrado para o Curso ID: {cursoId}." });
+
+            return Ok(resultado);
         }
     }
 }

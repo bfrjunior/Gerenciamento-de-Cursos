@@ -1,11 +1,12 @@
-﻿using Gerenciamento_cursos.Model;
+﻿using Gerenciamento_cursos.Common.Result;
+using Gerenciamento_cursos.Model;
 
 namespace Gerenciamento_cursos.Services.Matriculas
 {
     public interface IMatriculaService
     {
-        Task<(bool Success, string ErrorMessage)> MatricularAsync(int alunoId, int cursoId);
-        Task<bool> RemoverMatriculaAsync(int alunoId, int cursoId);
-        Task<IEnumerable<AlunoModel>> GetAlunosByCursoAsync(int cursoId);
+        Task<ApiResult> MatricularAsync(int alunoId, int cursoId);
+        Task<ApiResult> RemoverMatriculaAsync(int alunoId, int cursoId);
+        Task<ApiResult<IEnumerable<AlunoModel>>> GetAlunosByCursoAsync(int cursoId);
     }
 }

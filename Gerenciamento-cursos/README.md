@@ -4,6 +4,7 @@
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 8" />
   <img src="https://img.shields.io/badge/Entity_Framework-8.0-512BD4?style=for-the-badge&logo=microsoft&logoColor=white" alt="Entity Framework" />
   <img src="https://img.shields.io/badge/C%23-12.0-239120?style=for-the-badge&logo=c-sharp&logoColor=white" alt="C#" />
+  <img src="https://img.shields.io/badge/AutoMapper-12.0-FF6B35?style=for-the-badge&logo=automapper&logoColor=white" alt="AutoMapper" />
   <img src="https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?style=for-the-badge&logo=swagger&logoColor=white" alt="Swagger" />
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
 </div>
@@ -11,8 +12,8 @@
 <br />
 
 <div align="center">
-  <h3>API REST robusta para gerenciamento de cursos, alunos e matrículas</h3>
-  <p>Desenvolvida com .NET 8, Entity Framework Core e arquitetura limpa</p>
+  <h3>API REST robusta com arquitetura limpa e padrão Result</h3>
+  <p>Sistema completo para gerenciamento de cursos, alunos e matrículas com tratamento global de exceções</p>
 </div>
 
 ---
@@ -20,28 +21,29 @@
 ## ✨ Funcionalidades
 
 ### 📚 **Gerenciamento de Cursos**
-- ➕ Criar cursos com validação completa
-- ✏️ Editar informações de cursos existentes
-- 📋 Listar todos os cursos disponíveis
+- ➕ Criar cursos com validação completa e AutoMapper
+- ✏️ Editar informações usando padrão Result
+- 📋 Listar todos os cursos com ApiResult encapsulado
 - 🗑️ Excluir cursos com verificação de dependências
 
 ### 👥 **Gerenciamento de Alunos**
-- 👤 Cadastrar alunos com validação de idade (18+)
-- 📧 Validação de email único obrigatória
+- 👤 Cadastrar alunos com validação de idade (18+) e email único
+- 📧 Validação customizada com AlunoValidator
 - 📅 Controle rigoroso de data de nascimento
-- ✏️ Atualizar dados dos alunos
-- 🗑️ Remover alunos do sistema
+- ✏️ Atualizar dados com mapeamento automático
+- 🗑️ Remover alunos com tratamento de erros
 
 ### 📝 **Sistema de Matrículas**
-- 🔗 Matricular alunos em cursos específicos
+- 🔗 Matricular alunos com repositório especializado
 - 🚫 Prevenção automática de matrículas duplicadas
-- 📊 Relatórios detalhados de alunos por curso
-- 🗑️ Cancelamento de matrículas
+- 📊 Relatórios otimizados com Include do EF Core
+- 🗑️ Cancelamento de matrículas por chave composta
 
-### 📈 **Relatórios**
-- 📊 Alunos matriculados por curso
-- 🔍 Consultas otimizadas com Entity Framework
-- 📋 Dados estruturados para dashboards
+### 🛡️ **Tratamento Global de Exceções**
+- 🚨 Middleware personalizado para captura de exceções
+- 📋 Respostas padronizadas com ApiResult
+- 🔍 Logging estruturado de erros
+- 🎯 Códigos HTTP apropriados por tipo de exceção
 
 ---
 
@@ -52,22 +54,29 @@
 - **C# 12** - Linguagem com recursos modernos
 - **ASP.NET Core** - API REST de alta performance
 
+### **Arquitetura & Padrões**
+- **Result Pattern** - ApiResult<T> para encapsular respostas
+- **Repository Pattern** - Abstração de acesso a dados
+- **Service Layer** - Lógica de negócio centralizada
+- **AutoMapper** - Mapeamento automático DTO ↔ Model
+- **Dependency Injection** - Inversão de controle nativa
+
 ### **Banco de Dados**
 - **Entity Framework Core 8** - ORM moderno e eficiente
 - **In-Memory Database** - Para desenvolvimento e testes
-- **SQL Server** - Suporte para produção
-
-### **Arquitetura & Padrões**
-- **Repository Pattern** - Abstração de acesso a dados
-- **Service Layer** - Lógica de negócio centralizada
-- **Dependency Injection** - Inversão de controle nativa
-- **DTO Pattern** - Transferência segura de dados
+- **Repository Especializado** - MatriculaRepository para chaves compostas
+- **Migrations** - Controle de versão do banco
 
 ### **Validação & Qualidade**
-- **Data Annotations** - Validação declarativa
-- **Custom Validators** - Regras de negócio específicas
-- **Exception Handling** - Tratamento robusto de erros
-- **CORS** - Configuração para frontend
+- **Custom Validators** - AlunoValidator e CursoValidator
+- **Data Annotations** - Validação declarativa nos DTOs
+- **Global Exception Handler** - Middleware de tratamento de erros
+- **Structured Logging** - Logs organizados e rastreáveis
+
+### **Documentação & API**
+- **Swagger/OpenAPI** - Documentação interativa
+- **CORS Configurado** - Suporte para frontend
+- **Endpoints RESTful** - Padrões HTTP corretos
 
 ---
 
@@ -140,97 +149,127 @@ GET    /api/relatorios/alunos-por-curso/{cursoId}  # Alunos por curso
 
 ---
 
-## 🏗️ Arquitetura
+## 🏗️ Arquitetura Avançada
 
 ### **📁 Estrutura do Projeto**
 ```
 Gerenciamento-cursos/
-├── Controllers/          # Controladores da API
+├── Common/                   # Padrões compartilhados
+│   └── Result/
+│       └── ApiResult.cs      # Result Pattern implementation
+├── Controllers/              # Controladores da API
 │   ├── AlunosController.cs
 │   ├── CursosController.cs
 │   ├── MatriculasController.cs
 │   └── RelatoriosController.cs
-├── Data/                 # Contexto do banco de dados
+├── Data/                     # Contexto do banco de dados
 │   └── AppDbContext.cs
-├── Dto/                  # Data Transfer Objects
+├── Dto/                      # Data Transfer Objects
 │   ├── AlunoDto.cs
 │   ├── CursoDto.cs
 │   └── MatricularDto.cs
-├── Model/                # Modelos de domínio
+├── Mappings/                 # AutoMapper Profiles
+│   └── MappingProfile.cs
+├── Middleware/               # Middlewares customizados
+│   └── GlobalExceptionHandlerMiddleware.cs
+├── Model/                    # Modelos de domínio
 │   ├── AlunoModel.cs
 │   ├── CursoModel.cs
 │   └── MatriculaModel.cs
-├── Repositories/         # Padrão Repository
+├── Repositories/             # Padrão Repository
 │   ├── IRepository.cs
 │   ├── Repository.cs
 │   ├── IMatriculaRepository.cs
 │   └── MatriculaRepository.cs
-├── Services/             # Lógica de negócio
+├── Services/                 # Lógica de negócio
 │   ├── Aluno/
+│   │   ├── IAlunoService.cs
+│   │   └── AlunoService.cs
 │   ├── Cursos/
+│   │   ├── ICursoService.cs
+│   │   └── CursoService.cs
 │   └── Matriculas/
-├── Validators/           # Validadores customizados
+│       ├── IMatriculaService.cs
+│       └── MatriculaService.cs
+├── Validators/               # Validadores customizados
 │   ├── AlunoValidator.cs
 │   ├── CursoValidator.cs
 │   └── ValidationResultModel.cs
-└── Program.cs            # Configuração da aplicação
+└── Program.cs                # Configuração da aplicação
 ```
 
-### **🔄 Fluxo de Dados**
+### **🔄 Fluxo de Dados com Result Pattern**
 ```
 Controller → Service → Repository → Entity Framework → Database
      ↓         ↓          ↓              ↓              ↓
-   DTO    → Validation → Model      → SQL Query    → In-Memory
+   DTO    → ApiResult → Model      → SQL Query    → In-Memory
+     ↓         ↓          ↓              ↓              ↓
+AutoMapper → Validation → Update   → SaveChanges  → Success/Error
 ```
 
 ---
 
-## 📋 Validações e Regras de Negócio
+## 🎯 Padrão Result Pattern
 
-### **👤 Alunos**
-- ✅ Nome completo obrigatório (3-100 caracteres)
-- ✅ Email válido e único no sistema
-- ✅ Data de nascimento obrigatória
-- 🔞 **Apenas maiores de idade** (18+)
-- 📅 Data não pode ser futura
-
-### **📚 Cursos**
-- ✅ Nome do curso obrigatório (3-100 caracteres)
-- ✅ Descrição detalhada obrigatória (10-500 caracteres)
-- 🔤 Validação de caracteres especiais
-
-### **📝 Matrículas**
-- ✅ Aluno e curso devem existir
-- 🚫 Não permite matrículas duplicadas
-- 📅 Data de matrícula automática
-- 🔗 Chave composta (AlunoId + CursoId)
-
----
-
-## 🔒 Segurança
-
-### **🛡️ Medidas Implementadas**
-- **Validação Dupla** - DTO + Service Layer
-- **Sanitização** - Inputs limpos e seguros
-- **CORS Configurado** - Apenas origens autorizadas
-- **Exception Handling** - Não exposição de dados internos
-- **Unique Constraints** - Email único por aluno
-
-### **🌐 CORS Configuration**
+### **📦 ApiResult<T> Structure**
 ```csharp
-// Origens permitidas
-"http://localhost:5173"     // Vite Dev
-"http://localhost:3000"     // Docker Frontend
-"https://app.vercel.app"    // Produção
+public class ApiResult<T>
+{
+    public bool Success { get; set; }
+    public T? Data { get; set; }
+    public string Message { get; set; }
+    public List<string> Errors { get; set; }
+}
+```
+
+### **✅ Exemplo de Uso**
+```csharp
+// Sucesso
+return ApiResult<AlunoModel>.SuccessResult(aluno, "Aluno criado com sucesso");
+
+// Erro
+return ApiResult<AlunoModel>.FailureResult("Aluno não encontrado");
+
+// Erro com lista
+return ApiResult<AlunoModel>.FailureResult(validationErrors);
+```
+
+### **🎯 Benefícios**
+- **Consistência** - Todas as respostas seguem o mesmo padrão
+- **Tratamento de Erros** - Erros encapsulados e estruturados
+- **Debugging** - Mensagens claras para desenvolvimento
+- **Frontend** - Fácil integração com aplicações cliente
+
+---
+
+## 🛡️ Middleware Global de Exceções
+
+### **🚨 Tipos de Exceções Tratadas**
+```csharp
+ArgumentNullException     → 400 Bad Request
+ArgumentException         → 400 Bad Request  
+UnauthorizedAccessException → 401 Unauthorized
+KeyNotFoundException      → 404 Not Found
+Exception (genérica)      → 500 Internal Server Error
+```
+
+### **📋 Estrutura de Resposta de Erro**
+```json
+{
+  "success": false,
+  "message": "Descrição do erro",
+  "errors": ["Lista de erros detalhados"],
+  "data": null
+}
 ```
 
 ---
 
-## 🗃️ Banco de Dados
+## 🗃️ Banco de Dados Avançado
 
-### **📊 Modelo de Dados**
+### **📊 Modelo de Dados com Relacionamentos**
 ```sql
--- Alunos
+-- Alunos (com propriedade calculada Idade)
 CREATE TABLE Alunos (
     Id INT PRIMARY KEY IDENTITY,
     Nome NVARCHAR(100) NOT NULL,
@@ -245,87 +284,95 @@ CREATE TABLE Cursos (
     Descricao NVARCHAR(500) NOT NULL
 );
 
--- Matrículas (Chave Composta)
+-- Matrículas (Chave Composta + Repositório Especializado)
 CREATE TABLE Matriculas (
     AlunoId INT NOT NULL,
     CursoId INT NOT NULL,
-    DataMatricula DATETIME2 NOT NULL,
+    DataMatricula DATETIME2 NOT NULL DEFAULT GETDATE(),
     PRIMARY KEY (AlunoId, CursoId),
-    FOREIGN KEY (AlunoId) REFERENCES Alunos(Id),
-    FOREIGN KEY (CursoId) REFERENCES Cursos(Id)
+    FOREIGN KEY (AlunoId) REFERENCES Alunos(Id) ON DELETE CASCADE,
+    FOREIGN KEY (CursoId) REFERENCES Cursos(Id) ON DELETE CASCADE
 );
 ```
 
-### **🔗 Relacionamentos**
-- **Aluno** → **Matrículas** (1:N)
-- **Curso** → **Matrículas** (1:N)
-- **Matrícula** → **Aluno + Curso** (N:1)
+### **🔗 Relacionamentos Configurados**
+- **Aluno** → **Matrículas** (1:N) com Include automático
+- **Curso** → **Matrículas** (1:N) com Include automático  
+- **Matrícula** → **Aluno + Curso** (N:1) com navegação
 
 ---
 
-## 🧪 Testes
+## 🧪 Validações Customizadas
 
-### **📋 Endpoints Testados**
-- ✅ **CRUD Alunos** - Todas as operações
-- ✅ **CRUD Cursos** - Todas as operações
-- ✅ **Matrículas** - Criação e validações
-- ✅ **Relatórios** - Consultas otimizadas
+### **👤 AlunoValidator**
+```csharp
+✅ Nome: 3-100 caracteres obrigatório
+✅ Email: Formato válido e único no sistema
+✅ Data de Nascimento: Obrigatória e não futura
+🔞 Idade: Apenas maiores de 18 anos
+📧 Email único: Verificação no banco de dados
+```
 
-### **🔧 Como Testar**
-```bash
-# Swagger UI (Recomendado)
-https://localhost:7238/swagger
+### **📚 CursoValidator**
+```csharp
+✅ Nome: 3-100 caracteres obrigatório
+✅ Descrição: 10-500 caracteres obrigatória
+🔤 Validação: Caracteres especiais permitidos
+```
 
-# Postman Collection
-# Importar endpoints do Swagger
-
-# Curl Examples
-curl -X GET "https://localhost:7238/api/alunos"
-curl -X POST "https://localhost:7238/api/cursos" \
-  -H "Content-Type: application/json" \
-  -d '{"nome":"React","descricao":"Curso de React"}'
+### **📝 MatriculaValidator**
+```csharp
+✅ Aluno e Curso: Devem existir no sistema
+🚫 Duplicatas: Não permite matrículas duplicadas
+📅 Data: Automática com DateTime.Now
+🔗 Chave Composta: (AlunoId + CursoId)
 ```
 
 ---
 
-## 🐳 Docker
+## 🔧 AutoMapper Configuration
 
-### **📁 Arquivos Docker**
-- `Dockerfile` - Multi-stage build otimizado
-- `.dockerignore` - Exclusão de arquivos desnecessários
+### **🗺️ Mapeamentos Configurados**
+```csharp
+// AlunoDto ↔ AlunoModel
+CreateMap<AlunoDto, AlunoModel>()
+    .ForMember(dest => dest.Id, opt => opt.Ignore())
+    .ForMember(dest => dest.Matriculas, opt => opt.Ignore());
 
-### **🔧 Dockerfile**
-```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-# Build otimizado com cache de layers
+// CursoDto ↔ CursoModel  
+CreateMap<CursoDto, CursoModel>()
+    .ForMember(dest => dest.Id, opt => opt.Ignore())
+    .ForMember(dest => dest.Matriculas, opt => opt.Ignore());
+
+// MatricularDto ↔ MatriculaModel
+CreateMap<MatricularDto, MatriculaModel>()
+    .ForMember(dest => dest.DataMatricula, opt => opt.Ignore())
+    .ForMember(dest => dest.Aluno, opt => opt.Ignore())
+    .ForMember(dest => dest.Curso, opt => opt.Ignore());
 ```
-
-### **⚡ Otimizações**
-- **Multi-stage build** - Imagem final menor
-- **Layer caching** - Builds mais rápidos
-- **Runtime otimizado** - Apenas dependências necessárias
 
 ---
 
-## 📈 Performance
+## 📈 Performance & Otimizações
 
 ### **⚡ Otimizações Implementadas**
-- **Entity Framework Tracking** - Gerenciamento otimizado
-- **Async/Await** - Operações não-bloqueantes
-- **Repository Pattern** - Cache e reutilização
-- **DTO Mapping** - Transferência eficiente
-- **Include Queries** - Carregamento otimizado de relações
+- **Entity Framework Include** - Carregamento otimizado de relações
+- **Repository Especializado** - MatriculaRepository para chaves compostas
+- **Async/Await** - Operações não-bloqueantes em toda API
+- **AutoMapper** - Mapeamento eficiente DTO ↔ Model
+- **Result Pattern** - Evita exceptions desnecessárias
+- **Global Exception Handler** - Tratamento centralizado
 
-### **📊 Métricas**
+### **📊 Métricas de Performance**
 - **Startup Time** < 2s
 - **Response Time** < 100ms (operações simples)
 - **Memory Usage** < 50MB (container)
 - **Concurrent Users** 100+ (testado)
+- **Database Queries** Otimizadas com Include
 
 ---
 
-## 🚀 Deploy
+## 🚀 Deploy & Configuração
 
 ### **🌐 Ambientes Suportados**
 - **Desenvolvimento** - IIS Express / Kestrel
@@ -338,6 +385,44 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ASPNETCORE_ENVIRONMENT=Production
 ASPNETCORE_URLS=http://+:80
 ConnectionStrings__DefaultConnection=...
+```
+
+### **🔧 CORS Configuration**
+```csharp
+// Origens permitidas
+"http://localhost:5173"     // Vite Dev Server
+"http://localhost:3000"     // Docker Frontend  
+"https://app.vercel.app"    // Produção Frontend
+```
+
+---
+
+## 🧪 Testes & Qualidade
+
+### **📋 Endpoints Testados via Swagger**
+- ✅ **CRUD Alunos** - Todas as operações com validação
+- ✅ **CRUD Cursos** - Todas as operações com AutoMapper
+- ✅ **Matrículas** - Criação e validações de duplicatas
+- ✅ **Relatórios** - Consultas otimizadas com Include
+
+### **🔧 Como Testar**
+```bash
+# Swagger UI (Recomendado)
+https://localhost:7238/swagger
+
+# Exemplos de Teste
+POST /api/alunos
+{
+  "nome": "João Silva",
+  "email": "joao@email.com", 
+  "dataNascimento": "1995-01-15"
+}
+
+POST /api/matriculas
+{
+  "alunoId": 1,
+  "cursoId": 1
+}
 ```
 
 ---
@@ -353,9 +438,10 @@ ConnectionStrings__DefaultConnection=...
 
 ### **📝 Padrões de Código**
 - **C# Conventions** - Microsoft guidelines
-- **Clean Code** - Princípios SOLID
-- **Repository Pattern** - Consistência na arquitetura
-- **Async/Await** - Operações assíncronas
+- **Clean Architecture** - Princípios SOLID
+- **Result Pattern** - Consistência nas respostas
+- **AutoMapper** - Mapeamentos organizados
+- **Async/Await** - Operações assíncronas obrigatórias
 
 ---
 
@@ -365,12 +451,13 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ---
 
-## 👨‍💻 Autor
+## 👨💻 Autor
 
-Desenvolvido com ❤️ para demonstrar as melhores práticas em desenvolvimento de APIs .NET modernas.
+Desenvolvido com ❤️ demonstrando arquitetura limpa, padrões modernos e as melhores práticas em desenvolvimento de APIs .NET.
 
 ---
 
 <div align="center">
   <p>⭐ Se este projeto te ajudou, considere dar uma estrela!</p>
+  <p>🚀 <strong>API robusta • Result Pattern • AutoMapper • Global Exception Handler</strong></p>
 </div>

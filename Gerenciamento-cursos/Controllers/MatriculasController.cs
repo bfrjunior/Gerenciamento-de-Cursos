@@ -16,7 +16,7 @@ namespace Gerenciamento_cursos.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostMatricula(MatricularDto matricularDto)
+        public async Task<ActionResult> PostMatricula(MatricularDto matricularDto)
         {
             var result = await _matriculaService.MatricularAsync(
                 matricularDto.AlunoId,
@@ -24,24 +24,31 @@ namespace Gerenciamento_cursos.Controllers
             );
 
             if (!result.Success)
-            {
-                return Conflict(result.ErrorMessage);
-            }
+                return BadRequest(result);
 
-            return Ok("Matrícula realizada com sucesso.");
+            return Ok(result);
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteMatricula([FromQuery] int alunoId, [FromQuery] int cursoId)
+        public async Task<ActionResult> DeleteMatricula([FromQuery] int alunoId, [FromQuery] int cursoId)
         {
-            var success = await _matriculaService.RemoverMatriculaAsync(alunoId, cursoId);
+            var result = await _matriculaService.RemoverMatriculaAsync(alunoId, cursoId);
 
-            if (!success)
-            {
-                return NotFound("Matrícula não encontrada.");
-            }
+            if (!result.Success)
+                return NotFound(result);
 
-            return NoContent();
+            return Ok(result);
+        }
+
+        [HttpGet("curso/{cursoId}")]
+        public async Task<ActionResult> GetAlunosByCurso(int cursoId)
+        {
+            var result = await _matriculaService.GetAlunosByCursoAsync(cursoId);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
         }
     }
 }

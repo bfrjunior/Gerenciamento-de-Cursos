@@ -1,4 +1,5 @@
-﻿using Gerenciamento_cursos.Dto;
+﻿using AutoMapper;
+using Gerenciamento_cursos.Dto;
 using Gerenciamento_cursos.Model;
 using Gerenciamento_cursos.Services.Cursos;
 using Microsoft.AspNetCore.Mvc;
@@ -10,85 +11,72 @@ namespace Gerenciamento_cursos.Controllers
     public class CursosController : ControllerBase
     {
         private readonly ICursoService _cursoService;
+        private readonly IMapper _mapper;
 
-        public CursosController(ICursoService cursoService)
+        public CursosController(ICursoService cursoService, IMapper mapper)
         {
             _cursoService = cursoService;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CursoModel>>> GetCursos()
+        public async Task<ActionResult> GetCursos()
         {
-            return Ok(await _cursoService.GetAllAsync());
+            var result = await _cursoService.GetAllAsync();
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<CursoModel>> GetCurso(int id)
+        public async Task<ActionResult> GetCurso(int id)
         {
-            var curso = await _cursoService.GetByIdAsync(id);
+            var result = await _cursoService.GetByIdAsync(id);
 
-            if (curso == null)
-            {
-                return NotFound();
-            }
+            if (!result.Success)
+                return NotFound(result);
 
-            return Ok(curso);
+            return Ok(result);
         }
 
         [HttpPost]
-        public async Task<ActionResult<CursoModel>> PostCurso(CursoDto cursoDto)
+        public async Task<ActionResult> PostCurso(CursoDto cursoDto)
         {
-            var curso = new CursoModel
-            {
-                Nome = cursoDto.Nome,
-                Descricao = cursoDto.Descricao
-            };
+            var curso = _mapper.Map<CursoModel>(cursoDto);
 
             var result = await _cursoService.AddAsync(curso);
 
             if (!result.Success)
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+                return BadRequest(result);
 
-            return CreatedAtAction(nameof(GetCurso), new { id = result.Curso.Id }, result.Curso);
+            return CreatedAtAction(nameof(GetCurso), new { id = result.Data.Id }, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCurso(int id, CursoDto cursoDto)
+        public async Task<ActionResult> PutCurso(int id, CursoDto cursoDto)
         {
-            var curso = new CursoModel
-            {
-                Id = id,
-                Nome = cursoDto.Nome,
-                Descricao = cursoDto.Descricao
-            };
+            var curso = _mapper.Map<CursoModel>(cursoDto);
+            curso.Id = id;
 
             var result = await _cursoService.UpdateAsync(curso);
 
             if (!result.Success)
-            {
-                if (result.ErrorMessage == "Curso não encontrado.")
-                {
-                    return NotFound();
-                }
-                return BadRequest(result.ErrorMessage);
-            }
+                return BadRequest(result);
 
-            return NoContent();
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCurso(int id)
+        public async Task<ActionResult> DeleteCurso(int id)
         {
-            var success = await _cursoService.DeleteAsync(id);
+            var result = await _cursoService.DeleteAsync(id);
 
-            if (!success)
-            {
-                return NotFound();
-            }
+            if (!result.Success)
+                return NotFound(result);
 
-            return NoContent();
+            return Ok(result);
         }
     }
 }

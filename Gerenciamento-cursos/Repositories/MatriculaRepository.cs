@@ -21,7 +21,7 @@ namespace Gerenciamento_cursos.Repositories
                 .ToListAsync();
         }
 
-        public async Task<MatriculaModel> GetByKeysAsync(int alunoId, int cursoId)
+        public async Task<MatriculaModel?> GetByKeysAsync(int alunoId, int cursoId)
         {
             return await _context.Matriculas
                 .Include(m => m.Aluno)
@@ -57,7 +57,7 @@ namespace Gerenciamento_cursos.Repositories
             return await _context.Matriculas
                 .Where(m => m.CursoId == cursoId)
                 .Include(m => m.Aluno)
-                .Select(m => m.Aluno)
+                .Select(m => m.Aluno!)
                 .Distinct()
                 .ToListAsync();
         }

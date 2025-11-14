@@ -1,6 +1,7 @@
-﻿using Gerenciamento_cursos.Model;
+﻿using AutoMapper;
+using Gerenciamento_cursos.Common.Result;
+using Gerenciamento_cursos.Model;
 using Gerenciamento_cursos.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 namespace Gerenciamento_cursos.Services.Matriculas
 {
@@ -9,67 +10,76 @@ namespace Gerenciamento_cursos.Services.Matriculas
         private readonly IRepository<AlunoModel> _alunoRepository;
         private readonly IRepository<CursoModel> _cursoRepository;
         private readonly IMatriculaRepository _matriculaRepository;
+        private readonly IMapper _mapper;
 
         public MatriculaService(
             IRepository<AlunoModel> alunoRepository,
             IRepository<CursoModel> cursoRepository,
-            IMatriculaRepository matriculaRepository)
+            IMatriculaRepository matriculaRepository,
+            IMapper mapper)
         {
             _alunoRepository = alunoRepository;
             _cursoRepository = cursoRepository;
             _matriculaRepository = matriculaRepository;
+            _mapper = mapper;
         }
 
-        public async Task<(bool Success, string ErrorMessage)> MatricularAsync(int alunoId, int cursoId)
+        public async Task<ApiResult> MatricularAsync(int alunoId, int cursoId)
         {
-            if (!await _alunoRepository.ExistsAsync(alunoId))
-            {
-                return (false, "Aluno não encontrado.");
-            }
-
-            if (!await _cursoRepository.ExistsAsync(cursoId))
-            {
-                return (false, "Curso não encontrado.");
-            }
-
-            if (await _matriculaRepository.ExistsAsync(alunoId, cursoId))
-            {
-                return (false, "O aluno já está matriculado neste curso.");
-            }
-
-            var matricula = new MatriculaModel
-            {
-                AlunoId = alunoId,
-                CursoId = cursoId,
-                DataMatricula = DateTime.Now
-            };
-
             try
             {
+                if (!await _alunoRepository.ExistsAsync(alunoId))
+                    return ApiResult.FailureResult("Aluno não encontrado");
+
+                if (!await _cursoRepository.ExistsAsync(cursoId))
+                    return ApiResult.FailureResult("Curso não encontrado");
+
+                if (await _matriculaRepository.ExistsAsync(alunoId, cursoId))
+                    return ApiResult.FailureResult("O aluno já está matriculado neste curso");
+
+                var matricula = new MatriculaModel
+                {
+                    AlunoId = alunoId,
+                    CursoId = cursoId,
+                    DataMatricula = DateTime.Now
+                };
+
                 await _matriculaRepository.AddAsync(matricula);
-                return (true, null);
+                return ApiResult.SuccessResult("Matrícula criada com sucesso");
             }
             catch (Exception ex)
             {
-                return (false, $"Erro ao criar matrícula: {ex.Message}");
+                return ApiResult.FailureResult($"Erro ao criar matrícula: {ex.Message}");
             }
         }
 
-        public async Task<bool> RemoverMatriculaAsync(int alunoId, int cursoId)
+        public async Task<ApiResult> RemoverMatriculaAsync(int alunoId, int cursoId)
         {
             try
             {
-                return await _matriculaRepository.DeleteAsync(alunoId, cursoId);
+                var success = await _matriculaRepository.DeleteAsync(alunoId, cursoId);
+                if (!success)
+                    return ApiResult.FailureResult("Matrícula não encontrada");
+
+                return ApiResult.SuccessResult("Matrícula removida com sucesso");
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                return ApiResult.FailureResult($"Erro ao remover matrícula: {ex.Message}");
             }
         }
 
-        public async Task<IEnumerable<AlunoModel>> GetAlunosByCursoAsync(int cursoId)
+        public async Task<ApiResult<IEnumerable<AlunoModel>>> GetAlunosByCursoAsync(int cursoId)
         {
-            return await _matriculaRepository.GetAlunosByCursoAsync(cursoId);
+            try
+            {
+                var alunos = await _matriculaRepository.GetAlunosByCursoAsync(cursoId);
+                return ApiResult<IEnumerable<AlunoModel>>.SuccessResult(alunos, "Alunos recuperados com sucesso");
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<IEnumerable<AlunoModel>>.FailureResult($"Erro ao recuperar alunos: {ex.Message}");
+            }
         }
     }
 }

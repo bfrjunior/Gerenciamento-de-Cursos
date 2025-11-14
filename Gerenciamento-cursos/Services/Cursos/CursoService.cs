@@ -1,4 +1,6 @@
-﻿using Gerenciamento_cursos.Model;
+﻿using AutoMapper;
+using Gerenciamento_cursos.Common.Result;
+using Gerenciamento_cursos.Model;
 using Gerenciamento_cursos.Repositories;
 using Gerenciamento_cursos.Validators;
 
@@ -15,17 +17,36 @@ namespace Gerenciamento_cursos.Services.Cursos
             _validator = validator;
         }
 
-        public async Task<IEnumerable<CursoModel>> GetAllAsync()
+        public async Task<ApiResult<IEnumerable<CursoModel>>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            try
+            {
+                var cursos = await _repository.GetAllAsync();
+                return ApiResult<IEnumerable<CursoModel>>.SuccessResult(cursos, "Cursos recuperados com sucesso");
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<IEnumerable<CursoModel>>.FailureResult($"Erro ao recuperar cursos: {ex.Message}");
+            }
         }
 
-        public async Task<CursoModel> GetByIdAsync(int id)
+        public async Task<ApiResult<CursoModel>> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            try
+            {
+                var curso = await _repository.GetByIdAsync(id);
+                if (curso == null)
+                    return ApiResult<CursoModel>.FailureResult("Curso não encontrado");
+
+                return ApiResult<CursoModel>.SuccessResult(curso, "Curso recuperado com sucesso");
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<CursoModel>.FailureResult($"Erro ao recuperar curso: {ex.Message}");
+            }
         }
 
-        public async Task<(bool Success, string ErrorMessage, CursoModel Curso)> AddAsync(CursoModel curso)
+        public async Task<ApiResult<CursoModel>> AddAsync(CursoModel curso)
         {
             var validationResult = _validator.Validate(curso);
             
@@ -33,26 +54,26 @@ namespace Gerenciamento_cursos.Services.Cursos
             {
                 var errorMsg = validationResult.ErrorMessage ?? 
                     string.Join("; ", validationResult.Errors);
-                return (false, errorMsg, null);
+                return ApiResult<CursoModel>.FailureResult(errorMsg);
             }
 
             try
             {
                 var newCurso = await _repository.AddAsync(curso);
-                return (true, null, newCurso);
+                return ApiResult<CursoModel>.SuccessResult(newCurso, "Curso criado com sucesso");
             }
             catch (Exception ex)
             {
-                return (false, $"Erro ao adicionar curso: {ex.Message}", null);
+                return ApiResult<CursoModel>.FailureResult($"Erro ao adicionar curso: {ex.Message}");
             }
         }
 
-        public async Task<(bool Success, string ErrorMessage)> UpdateAsync(CursoModel curso)
+        public async Task<ApiResult<CursoModel>> UpdateAsync(CursoModel curso)
         {
             var existingCurso = await _repository.GetByIdAsync(curso.Id);
             if (existingCurso == null)
             {
-                return (false, "Curso não encontrado.");
+                return ApiResult<CursoModel>.FailureResult("Curso não encontrado");
             }
 
             var validationResult = _validator.Validate(curso);
@@ -61,27 +82,37 @@ namespace Gerenciamento_cursos.Services.Cursos
             {
                 var errorMsg = validationResult.ErrorMessage ?? 
                     string.Join("; ", validationResult.Errors);
-                return (false, errorMsg);
+                return ApiResult<CursoModel>.FailureResult(errorMsg);
             }
 
             try
             {
-                // Atualiza apenas os campos necessários
                 existingCurso.Nome = curso.Nome;
                 existingCurso.Descricao = curso.Descricao;
                 
                 await _repository.UpdateAsync(existingCurso);
-                return (true, null);
+                return ApiResult<CursoModel>.SuccessResult(existingCurso, "Curso atualizado com sucesso");
             }
             catch (Exception ex)
             {
-                return (false, $"Erro ao atualizar curso: {ex.Message}");
+                return ApiResult<CursoModel>.FailureResult($"Erro ao atualizar curso: {ex.Message}");
             }
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<ApiResult> DeleteAsync(int id)
         {
-            return await _repository.DeleteAsync(id);
+            try
+            {
+                var success = await _repository.DeleteAsync(id);
+                if (!success)
+                    return ApiResult.FailureResult("Curso não encontrado");
+
+                return ApiResult.SuccessResult("Curso excluído com sucesso");
+            }
+            catch (Exception ex)
+            {
+                return ApiResult.FailureResult($"Erro ao excluir curso: {ex.Message}");
+            }
         }
     }
 }
