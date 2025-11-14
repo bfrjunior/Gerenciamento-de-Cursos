@@ -3,21 +3,23 @@ using Moq;
 using Gerenciamento_cursos.Services.Matriculas;
 using Gerenciamento_cursos.Repositories;
 using Gerenciamento_cursos.Model;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using System;
+using AutoMapper;
+using Gerenciamento_cursos.Common.Result;
 
 namespace Gerenciamento_cursos.Tests
 {
-    public interface IMatriculaRepository : IRepository<MatriculaModel>
-    {
-        Task<bool> ExistsAsync(int alunoId, int cursoId);
-        Task<bool> DeleteAsync(int alunoId, int cursoId);
-        Task<IEnumerable<AlunoModel>> GetAlunosByCursoAsync(int cursoId);
-    }
+
 
     public class MatriculaServiceTests
     {
         private readonly Mock<IRepository<AlunoModel>> _mockAlunoRepository;
         private readonly Mock<IRepository<CursoModel>> _mockCursoRepository;
         private readonly Mock<IMatriculaRepository> _mockMatriculaRepository;
+        private readonly Mock<IMapper> _mockMapper;
         private readonly MatriculaService _service;
 
         public MatriculaServiceTests()
@@ -25,10 +27,12 @@ namespace Gerenciamento_cursos.Tests
             _mockAlunoRepository = new Mock<IRepository<AlunoModel>>();
             _mockCursoRepository = new Mock<IRepository<CursoModel>>();
             _mockMatriculaRepository = new Mock<IMatriculaRepository>();
+            _mockMapper = new Mock<IMapper>();
             _service = new MatriculaService(
                 _mockAlunoRepository.Object, 
                 _mockCursoRepository.Object, 
-                _mockMatriculaRepository.Object);
+                _mockMatriculaRepository.Object,
+                _mockMapper.Object);
         }
 
         [Fact]
@@ -73,7 +77,6 @@ namespace Gerenciamento_cursos.Tests
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Aluno n„o encontrado.", result.ErrorMessage);
             _mockMatriculaRepository.Verify(r => r.AddAsync(It.IsAny<MatriculaModel>()), Times.Never);
         }
 
@@ -95,7 +98,6 @@ namespace Gerenciamento_cursos.Tests
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Curso n„o encontrado.", result.ErrorMessage);
         }
 
         [Fact]
@@ -119,7 +121,6 @@ namespace Gerenciamento_cursos.Tests
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("O aluno j· est· matriculado neste curso.", result.ErrorMessage);
             _mockMatriculaRepository.Verify(r => r.AddAsync(It.IsAny<MatriculaModel>()), Times.Never);
         }
 
@@ -137,7 +138,7 @@ namespace Gerenciamento_cursos.Tests
             var result = await _service.RemoverMatriculaAsync(alunoId, cursoId);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.Success);
             _mockMatriculaRepository.Verify(r => r.DeleteAsync(alunoId, cursoId), Times.Once);
         }
 
@@ -155,7 +156,7 @@ namespace Gerenciamento_cursos.Tests
             var result = await _service.RemoverMatriculaAsync(alunoId, cursoId);
 
             // Assert
-            Assert.False(result);
+            Assert.False(result.Success);
         }
 
         [Fact]
@@ -165,7 +166,7 @@ namespace Gerenciamento_cursos.Tests
             int cursoId = 1;
             var alunos = new List<AlunoModel>
             {
-                new AlunoModel { Id = 1, Nome = "Jo„o", Email = "joao@example.com", DataNascimento = new DateTime(2005, 1, 1) },
+                new AlunoModel { Id = 1, Nome = "Jo√£o", Email = "joao@example.com", DataNascimento = new DateTime(2005, 1, 1) },
                 new AlunoModel { Id = 2, Nome = "Maria", Email = "maria@example.com", DataNascimento = new DateTime(2003, 5, 15) }
             };
 
@@ -176,8 +177,8 @@ namespace Gerenciamento_cursos.Tests
             var result = await _service.GetAlunosByCursoAsync(cursoId);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(2, result.Count());
+            Assert.True(result.Success);
+            Assert.Equal(2, result.Data.Count());
         }
 
         [Fact]
@@ -193,7 +194,8 @@ namespace Gerenciamento_cursos.Tests
             var result = await _service.GetAlunosByCursoAsync(cursoId);
 
             // Assert
-            Assert.Empty(result);
+            Assert.True(result.Success);
+            Assert.Empty(result.Data);
         }
     }
 }

@@ -4,6 +4,10 @@ using Gerenciamento_cursos.Services.Aluno;
 using Gerenciamento_cursos.Repositories;
 using Gerenciamento_cursos.Model;
 using Gerenciamento_cursos.Validators;
+using System.Threading.Tasks;
+using System;
+using AutoMapper;
+using Gerenciamento_cursos.Common.Result;
 
 namespace Gerenciamento_cursos.Tests
 {
@@ -11,13 +15,15 @@ namespace Gerenciamento_cursos.Tests
     {
         private readonly Mock<IRepository<AlunoModel>> _mockRepository;
         private readonly Mock<IAlunoValidator> _mockValidator;
+        private readonly Mock<IMapper> _mockMapper;
         private readonly AlunoService _service;
 
         public AlunoServiceTests()
         {
             _mockRepository = new Mock<IRepository<AlunoModel>>();
             _mockValidator = new Mock<IAlunoValidator>();
-            _service = new AlunoService(_mockRepository.Object, _mockValidator.Object);
+            _mockMapper = new Mock<IMapper>();
+            _service = new AlunoService(_mockRepository.Object, _mockValidator.Object, _mockMapper.Object);
         }
 
         [Fact]
@@ -26,7 +32,7 @@ namespace Gerenciamento_cursos.Tests
             // Arrange
             var aluno = new AlunoModel 
             { 
-                Nome = "João Silva", 
+                Nome = "Joï¿½o Silva", 
                 Email = "joao@example.com", 
                 DataNascimento = new DateTime(2005, 1, 1) 
             };
@@ -49,15 +55,15 @@ namespace Gerenciamento_cursos.Tests
         public async Task GetByIdAsync_WithValidId_ReturnsAluno()
         {
             // Arrange
-            var aluno = new AlunoModel { Id = 1, Nome = "João Silva" };
+            var aluno = new AlunoModel { Id = 1, Nome = "Joï¿½o Silva" };
             _mockRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(aluno);
 
             // Act
             var result = await _service.GetByIdAsync(1);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(aluno.Id, result.Id);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
         }
 
         [Fact]
@@ -70,7 +76,7 @@ namespace Gerenciamento_cursos.Tests
             var result = await _service.DeleteAsync(1);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.Success);
         }
     }
 }

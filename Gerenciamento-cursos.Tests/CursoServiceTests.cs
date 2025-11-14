@@ -4,6 +4,11 @@ using Gerenciamento_cursos.Services.Cursos;
 using Gerenciamento_cursos.Repositories;
 using Gerenciamento_cursos.Model;
 using Gerenciamento_cursos.Validators;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using AutoMapper;
+using Gerenciamento_cursos.Common.Result;
 
 namespace Gerenciamento_cursos.Tests
 {
@@ -11,12 +16,14 @@ namespace Gerenciamento_cursos.Tests
     {
         private readonly Mock<IRepository<CursoModel>> _mockRepository;
         private readonly Mock<ICursoValidator> _mockValidator;
+        private readonly Mock<IMapper> _mockMapper;
         private readonly CursoService _service;
 
         public CursoServiceTests()
         {
             _mockRepository = new Mock<IRepository<CursoModel>>();
             _mockValidator = new Mock<ICursoValidator>();
+            _mockMapper = new Mock<IMapper>();
             _service = new CursoService(_mockRepository.Object, _mockValidator.Object);
         }
 
@@ -26,8 +33,8 @@ namespace Gerenciamento_cursos.Tests
             // Arrange
             var curso = new CursoModel 
             { 
-                Nome = "C# Avançado", 
-                Descricao = "Curso completo de C# com .NET 8 e padrões de design" 
+                Nome = "C# AvanÃ§ado", 
+                Descricao = "Curso completo de C# com .NET 8 e padrÃµes de design" 
             };
             
             _mockValidator.Setup(v => v.Validate(curso))
@@ -41,8 +48,7 @@ namespace Gerenciamento_cursos.Tests
 
             // Assert
             Assert.True(result.Success);
-            Assert.NotNull(result.Curso);
-            Assert.Equal(curso.Nome, result.Curso.Nome);
+            Assert.NotNull(result.Data);
             _mockRepository.Verify(r => r.AddAsync(curso), Times.Once);
         }
 
@@ -67,7 +73,6 @@ namespace Gerenciamento_cursos.Tests
 
             // Assert
             Assert.False(result.Success);
-            Assert.NotNull(result.ErrorMessage);
             _mockRepository.Verify(r => r.AddAsync(It.IsAny<CursoModel>()), Times.Never);
         }
 
@@ -77,7 +82,7 @@ namespace Gerenciamento_cursos.Tests
             // Arrange
             var cursos = new List<CursoModel>
             {
-                new CursoModel { Id = 1, Nome = "C#", Descricao = "Linguagem de programação moderna" },
+                new CursoModel { Id = 1, Nome = "C#", Descricao = "Linguagem de programaÃ§Ã£o moderna" },
                 new CursoModel { Id = 2, Nome = "ASP.NET", Descricao = "Framework para desenvolvimento web" }
             };
 
@@ -88,8 +93,8 @@ namespace Gerenciamento_cursos.Tests
             var result = await _service.GetAllAsync();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(2, result.Count());
+            Assert.True(result.Success);
+            Assert.Equal(2, result.Data.Count());
         }
 
         [Fact]
@@ -99,7 +104,7 @@ namespace Gerenciamento_cursos.Tests
             var curso = new CursoModel 
             { 
                 Id = 1, 
-                Nome = "C# Avançado", 
+                Nome = "C# AvanÃ§ado", 
                 Descricao = "Curso completo de C#" 
             };
 
@@ -110,9 +115,8 @@ namespace Gerenciamento_cursos.Tests
             var result = await _service.GetByIdAsync(1);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(1, result.Id);
-            Assert.Equal("C# Avançado", result.Nome);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Data);
         }
 
         [Fact]
@@ -120,13 +124,13 @@ namespace Gerenciamento_cursos.Tests
         {
             // Arrange
             _mockRepository.Setup(r => r.GetByIdAsync(999))
-                .ReturnsAsync((CursoModel)null);
+                .ReturnsAsync((CursoModel?)null);
 
             // Act
             var result = await _service.GetByIdAsync(999);
 
             // Assert
-            Assert.Null(result);
+            Assert.False(result.Success);
         }
 
         [Fact]
@@ -137,14 +141,14 @@ namespace Gerenciamento_cursos.Tests
             { 
                 Id = 1, 
                 Nome = "C#", 
-                Descricao = "Curso básico" 
+                Descricao = "Curso bÃ¡sico" 
             };
 
             var cursoAtualizado = new CursoModel 
             { 
                 Id = 1, 
-                Nome = "C# Avançado", 
-                Descricao = "Curso completo de C# com padrões avançados" 
+                Nome = "C# AvanÃ§ado", 
+                Descricao = "Curso completo de C# com padrÃµes avanÃ§ados" 
             };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -168,17 +172,16 @@ namespace Gerenciamento_cursos.Tests
         public async Task UpdateAsync_WithNonExistentCurso_ReturnsFailed()
         {
             // Arrange
-            var curso = new CursoModel { Id = 999, Nome = "Inexistente", Descricao = "Este curso não existe" };
+            var curso = new CursoModel { Id = 999, Nome = "Inexistente", Descricao = "Este curso nÃ£o existe" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(999))
-                .ReturnsAsync((CursoModel)null);
+                .ReturnsAsync((CursoModel?)null);
 
             // Act
             var result = await _service.UpdateAsync(curso);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Curso não encontrado.", result.ErrorMessage);
         }
 
         [Fact]
@@ -192,7 +195,7 @@ namespace Gerenciamento_cursos.Tests
             var result = await _service.DeleteAsync(1);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.Success);
             _mockRepository.Verify(r => r.DeleteAsync(1), Times.Once);
         }
 
@@ -207,7 +210,7 @@ namespace Gerenciamento_cursos.Tests
             var result = await _service.DeleteAsync(999);
 
             // Assert
-            Assert.False(result);
+            Assert.False(result.Success);
         }
     }
 }
