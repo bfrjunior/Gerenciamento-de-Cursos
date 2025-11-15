@@ -101,6 +101,7 @@ Via Docker:
 
 
 ### Produção
+OBS: Ao cessar a url de produção aguarde alguns instantes até que o container do backend hospedado no render inicie após status ONLINE a pagina estará pronta para ser testada. :)
 - **Frontend**: https://gerenciamento-matriculas.vercel.app/
 - **API**: https://gerenciamento-de-cursos.onrender.com/api
 
